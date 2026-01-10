@@ -32,10 +32,12 @@ export default function Header() {
 
                 <div className="flex items-center gap-3">
                             <SignedOut>
-                                <SignInButton />
-                                <SignUpButton>
-                                    <Button>Sign Up</Button>
-                                </SignUpButton>
+                                <Link href="/sign-in">
+                                  <Button variant="ghost">Sign In</Button>
+                                </Link>
+                                <Link href="/sign-up">
+                                  <Button>Sign Up</Button>
+                                </Link>
                             </SignedOut>
                             <SignedIn>
                                 <UserButton/>

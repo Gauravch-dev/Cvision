@@ -19,6 +19,8 @@ SECTION_KEYWORDS = {
         "summary",
         "professional summary",
         "about",
+        "objective",
+        "career objective"
     ],
     "education": [
         "education",
@@ -29,15 +31,20 @@ SECTION_KEYWORDS = {
         "work experience",
         "employment",
         "relevant experience",
+        "internship",
+        "internships",
+        "training"
     ],
     "projects": [
         "projects",
         "project",
+        "academic projects"
     ],
     "skills": [
         "skills",
         "technical skills",
         "skillset",
+        "softskills"
     ],
     "certifications": [
         "certifications",

@@ -9,5 +9,9 @@
     "dev": "npm run dev --workspace=frontend",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.36.8",
+    "mongoose": "^9.1.4"
   }
 }

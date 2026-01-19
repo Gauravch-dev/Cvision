@@ -1,0 +1,155 @@
+const express = require('express');
+const router = express.Router();
+const JobRequirement = require('../models/JobRequirement');
+
+// @route   POST /api/job-requirements
+// @desc    Create a new job requirement
+// @access  Public
+router.post('/', async (req, res) => {
+  try {
+    const {
+      jobTitle,
+      jobDescription,
+      skills,
+      experience,
+      candidateCount,
+      resumeCount,
+    } = req.body;
+
+    // Validation
+    if (!jobTitle || !jobDescription || !skills || !experience) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields',
+      });
+    }
+
+    // Parse skills if it's a string
+    const skillsArray = typeof skills === 'string' 
+      ? skills.split(',').map(s => s.trim()).filter(Boolean)
+      : skills;
+
+    // Create job requirement
+    const jobRequirement = new JobRequirement({
+      jobTitle,
+      jobDescription,
+      skills: skillsArray,
+      experience,
+      candidateCount: candidateCount || 5,
+      resumeCount: resumeCount || 0,
+    });
+
+    await jobRequirement.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Job requirement created successfully',
+      data: jobRequirement,
+    });
+  } catch (error) {
+    console.error('Error creating job requirement:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: messages,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating job requirement',
+      error: error.message,
+    });
+  }
+});
+
+// @route   GET /api/job-requirements
+// @desc    Get all job requirements
+// @access  Public
+router.get('/', async (req, res) => {
+  try {
+    const jobRequirements = await JobRequirement.find()
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.status(200).json({
+      success: true,
+      count: jobRequirements.length,
+      data: jobRequirements,
+    });
+  } catch (error) {
+    console.error('Error fetching job requirements:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching job requirements',
+    });
+  }
+});
+
+// @route   GET /api/job-requirements/:id
+// @desc    Get single job requirement
+// @access  Public
+router.get('/:id', async (req, res) => {
+  try {
+    const jobRequirement = await JobRequirement.findById(req.params.id);
+
+    if (!jobRequirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job requirement not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: jobRequirement,
+    });
+  } catch (error) {
+    console.error('Error fetching job requirement:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching job requirement',
+    });
+  }
+});
+
+// @route   PUT /api/job-requirements/:id
+// @desc    Update job requirement status
+// @access  Public
+router.put('/:id', async (req, res) => {
+  try {
+    const { status, resumeCount } = req.body;
+
+    const jobRequirement = await JobRequirement.findById(req.params.id);
+
+    if (!jobRequirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job requirement not found',
+      });
+    }
+
+    if (status) jobRequirement.status = status;
+    if (resumeCount !== undefined) jobRequirement.resumeCount = resumeCount;
+
+    await jobRequirement.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Job requirement updated successfully',
+      data: jobRequirement,
+    });
+  } catch (error) {
+    console.error('Error updating job requirement:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating job requirement',
+    });
+  }
+});
+
+module.exports = router;

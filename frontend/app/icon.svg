@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:currentColor;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:currentColor;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+  
+  <path 
+    d="M360 416H152C99.2 416 56 372.8 56 320V192C56 139.2 99.2 96 152 96H360C386.4 96 408 117.6 408 144C408 170.4 386.4 192 360 192H344V320H360C386.4 320 408 341.6 408 368C408 394.4 386.4 416 360 416Z" 
+    stroke="currentColor" 
+    stroke-width="48" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+  />
+  
+  <!-- Circuit Nodes -->
+  <circle cx="152" cy="192" r="24" fill="currentColor"/>
+  <circle cx="152" cy="320" r="24" fill="currentColor"/>
+  <circle cx="360" cy="144" r="24" fill="currentColor"/>
+  <circle cx="360" cy="368" r="24" fill="currentColor"/>
+  
+  <!-- Inner Circuit Lines -->
+  <path d="M152 192V320" stroke="currentColor" stroke-width="32" stroke-linecap="round"/>
+  <path d="M248 192V320" stroke="currentColor" stroke-width="32" stroke-linecap="round"/>
+  
+  <!-- Tech detail -->
+  <circle cx="248" cy="256" r="32" fill="currentColor"/>
+  <path d="M200 256H152" stroke="currentColor" stroke-width="24" stroke-linecap="round"/>
+  <path d="M344 256H296" stroke="currentColor" stroke-width="24" stroke-linecap="round"/>
+</svg>

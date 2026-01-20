@@ -34,6 +34,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <head>
+          <title>CVision – AI-Powered Resume Screening & Job Matching</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <meta name="description" content="AI-powered recruitment engine that reads resumes like a human, but at machine speed." />
         </head>

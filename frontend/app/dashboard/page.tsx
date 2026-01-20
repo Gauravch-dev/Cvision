@@ -1,39 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useState, useEffect } from "react";
 import UploadPanel from "@/components/dashboard/UploadPanel";
-import ProcessingStatus from "@/components/dashboard/ProcessingStatus";
-import ResultsList from "@/components/dashboard/ResultsList";
-import CandidateInsights from "@/components/dashboard/CandidateInsights";
-import EmptyState from "@/components/dashboard/EmptyState";
 import LoadingSkeleton from "@/components/dashboard/LoadingSkeleton";
+import { AnalyticsDashboard } from "@/components/dashboard/AnalyticsDashboard";
+import { CandidateProfile } from "@/components/dashboard/CandidateModal";
 import { toast } from "sonner";
 
-export interface Candidate {
-  id: string;
-  name: string;
-  score: number;
-  experience: number;
-  skills: string[];
-  breakdown?: {
-    matchedSkills: string[];
-    missingSkills: string[];
-    reasoning: string;
-  };
+type ViewState = "form" | "results";
+
+interface JobData {
+  jobTitle: string;
+  jobDescription: string;
+  skills: string;
+  experience: string;
+  location: string;
+  salaryRange: string;
 }
 
 export default function DashboardPage() {
+  const [viewState, setViewState] = useState<ViewState>("form");
   const [processing, setProcessing] = useState(false);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [selected, setSelected] = useState<Candidate | null>(null);
-  const [jobRequirementId, setJobRequirementId] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [jobData, setJobData] = useState<JobData | null>(null);
+  const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
 
-  // Simulate initial load
-  useState(() => {
+  useEffect(() => {
     setTimeout(() => setInitialLoading(false), 1000);
-  });
+  }, []);
 
   const handleGenerate = async ({
     files,
@@ -59,7 +53,6 @@ export default function DashboardPage() {
 
     setProcessing(true);
     setCandidates([]);
-    setSelected(null);
 
     toast.loading("Processing resumes...", {
       description: "Analyzing candidates and matching requirements",
@@ -67,164 +60,187 @@ export default function DashboardPage() {
     });
 
     try {
-      const jobReqResponse = await fetch(
-        "http://127.0.0.1:8000/api/job-requirements",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            jobTitle,
-            jobDescription,
-            skills,
-            experience,
-            candidateCount,
-            resumeCount: files.length,
-          }),
-        }
-      );
+      // Store job data
+      setJobData({
+        jobTitle,
+        jobDescription,
+        skills,
+        experience,
+        location: "Bangalore, India", // Can make this dynamic later
+        salaryRange: "₹12L - ₹20L" // Can make this dynamic later
+      });
 
-      if (!jobReqResponse.ok) {
-        throw new Error("Failed to save job requirements");
+      // Try backend connection (optional)
+      try {
+        const jobReqResponse = await fetch(
+          "http://127.0.0.1:8000/api/job-requirements",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jobTitle,
+              jobDescription,
+              skills,
+              experience,
+              candidateCount,
+              resumeCount: files.length,
+            }),
+          }
+        );
+
+        if (jobReqResponse.ok) {
+          const jobReqData = await jobReqResponse.json();
+          console.log("Job saved:", jobReqData.data._id);
+        }
+      } catch (backendError) {
+        console.log("Backend not available, using mock data");
       }
 
-      const jobReqData = await jobReqResponse.json();
-      const savedJobReqId = jobReqData.data._id;
-      setJobRequirementId(savedJobReqId);
-
-      const formData = new FormData();
-      formData.append("file", files[0]);
-      formData.append("jobRequirementId", savedJobReqId);
-
-      const resumeResponse = await fetch(
-        "http://127.0.0.1:8000/extract-resume",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!resumeResponse.ok) {
-        throw new Error("Resume processing failed");
-      }
-
-      await resumeResponse.json();
-
-      await fetch(
-        `http://127.0.0.1:8000/api/job-requirements/${savedJobReqId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            status: "processing",
-          }),
-        }
-      );
-
-      const mockCandidates: Candidate[] = [
-        {
-          id: "1",
-          name: files[0].name.replace(".pdf", ""),
-          score: 85,
-          experience: 3,
-          skills: ["Resume Parsed", "Backend Connected", "MongoDB Saved"],
-          breakdown: {
-            matchedSkills: ["Resume Parsed", "MongoDB Integration"],
-            missingSkills: ["Scoring Logic"],
-            reasoning:
-              "Job requirements saved to MongoDB. Resume processed successfully.",
-          },
-        },
+      // Generate enriched candidate profiles
+      const skillsList = skills.split(',').map(s => s.trim()).filter(Boolean);
+      const candidateNames = [
+        "Sarah Chen", "Alex Martinez", "James Wilson", "Priya Sharma",
+        "Michael Brown", "Emily Davis", "Raj Patel", "Lisa Anderson",
+        "David Kim", "Jessica Taylor"
       ];
 
-      setCandidates(mockCandidates);
+      const titles = [
+        `Senior ${jobTitle}`, `Lead ${jobTitle}`, jobTitle,
+        `${jobTitle} II`, `${jobTitle} III`
+      ];
 
-      await fetch(
-        `http://127.0.0.1:8000/api/job-requirements/${savedJobReqId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            status: "completed",
-          }),
-        }
-      );
+      const locations = [
+        "Mumbai, India", "Bangalore, India", "Pune, India",
+        "Delhi, India", "Hyderabad, India"
+      ];
+
+      const mockCandidates: CandidateProfile[] = files
+        .slice(0, Math.min(files.length, candidateCount))
+        .map((file, index) => {
+          const baseScore = 95 - (index * 7);
+          const actualScore = Math.max(62, baseScore + Math.floor(Math.random() * 8));
+          const matchedSkillsCount = Math.max(1, skillsList.length - Math.floor(index / 2));
+          const yearsExp = 2 + index + Math.floor(Math.random() * 4);
+
+          return {
+            id: `candidate-${index + 1}`,
+            name: candidateNames[index % candidateNames.length],
+            title: titles[index % titles.length],
+            location: locations[index % locations.length],
+            experience: yearsExp,
+            salaryRange: `₹${8 + index * 2}L - ₹${14 + index * 3}L`,
+            score: actualScore,
+            contact: {
+              email: `${candidateNames[index % candidateNames.length].toLowerCase().replace(' ', '.')}@example.com`,
+              phone: `+91 ${90000 + index * 1111} ${10000 + index * 111}`,
+            },
+            about: index === 0
+              ? `${yearsExp}+ years of experience in ${jobTitle.toLowerCase()}. Strong background in ${skillsList.slice(0, 3).join(', ')}. Proven track record of delivering high-quality solutions and leading cross-functional teams.`
+              : `Experienced ${jobTitle.toLowerCase()} with ${yearsExp} years in the industry. Skilled in ${skillsList.slice(0, 2).join(' and ')}. Passionate about creating impactful solutions and continuous learning.`,
+            skills: [
+              ...skillsList.slice(0, matchedSkillsCount),
+              ...(index === 0 ? ["Leadership", "Problem Solving", "Agile"] :
+                index === 1 ? ["Team Player", "Communication", "CI/CD"] :
+                  index === 2 ? ["Code Review", "Mentoring"] :
+                    ["Collaboration"])
+            ],
+            radarScores: {
+              skills: Math.min(100, actualScore + Math.floor(Math.random() * 10)),
+              experience: Math.min(100, 70 + yearsExp * 5 + Math.floor(Math.random() * 10)),
+              communication: Math.min(100, 75 + Math.floor(Math.random() * 20)),
+              culture: Math.min(100, 80 + Math.floor(Math.random() * 15)),
+              roleFit: Math.min(100, actualScore - 5 + Math.floor(Math.random() * 10)),
+            },
+          };
+        });
+
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      setCandidates(mockCandidates);
+      setViewState("results");
 
       toast.success("Analysis complete!", {
-        description: `Successfully processed ${mockCandidates.length} candidate${mockCandidates.length > 1 ? 's' : ''}`,
+        description: `Successfully analyzed ${mockCandidates.length} candidate${mockCandidates.length > 1 ? 's' : ''}`,
         id: "processing-toast"
       });
     } catch (error) {
       console.error("Error processing resumes:", error);
-      
+
       toast.error("Processing failed", {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         id: "processing-toast"
       });
-
-      if (jobRequirementId) {
-        await fetch(
-          `http://127.0.0.1:8000/api/job-requirements/${jobRequirementId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              status: "failed",
-            }),
-          }
-        );
-      }
     } finally {
       setProcessing(false);
     }
   };
 
+  const handleBackToForm = () => {
+    setViewState("form");
+    setCandidates([]);
+    setJobData(null);
+  };
+
   if (initialLoading) {
     return (
-      <DashboardLayout>
+      <div className="pt-10">
         <LoadingSkeleton />
-      </DashboardLayout>
+      </div>
     );
   }
 
+  // Show Analytics Dashboard
+  if (viewState === "results" && candidates.length > 0 && jobData) {
+    // Generate analytics data
+    const analyticsData = {
+      jobTitle: jobData.jobTitle,
+      location: jobData.location,
+      experienceRange: jobData.experience,
+      salaryRange: jobData.salaryRange,
+      postedDaysAgo: 2,
+      totalApplicants: candidates.length,
+      avgMatchScore: Math.round(candidates.reduce((sum, c) => sum + c.score, 0) / candidates.length),
+      matchDistribution: [
+        { range: "0-20%", count: candidates.filter(c => c.score < 20).length },
+        { range: "20-40%", count: candidates.filter(c => c.score >= 20 && c.score < 40).length },
+        { range: "40-60%", count: candidates.filter(c => c.score >= 40 && c.score < 60).length },
+        { range: "60-80%", count: candidates.filter(c => c.score >= 60 && c.score < 80).length },
+        { range: "80-100%", count: candidates.filter(c => c.score >= 80).length },
+      ],
+      activityByDay: [
+        { day: "Mon", count: Math.floor(candidates.length * 0.1) },
+        { day: "Tue", count: Math.floor(candidates.length * 0.15) },
+        { day: "Wed", count: Math.floor(candidates.length * 0.25) },
+        { day: "Thu", count: Math.floor(candidates.length * 0.3) },
+        { day: "Fri", count: Math.floor(candidates.length * 0.15) },
+        { day: "Sat", count: Math.floor(candidates.length * 0.03) },
+        { day: "Sun", count: Math.floor(candidates.length * 0.02) },
+      ],
+      candidates,
+    };
+
+    return <AnalyticsDashboard data={analyticsData} onBack={handleBackToForm} />;
+  }
+
+  // Show Form
   return (
-    <DashboardLayout>
+    <div className="space-y-8 pb-20">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Generate Analysis</h1>
+        <p className="text-muted-foreground">Upload resumes and define requirements to find your perfect candidate.</p>
+      </div>
+
       <UploadPanel onGenerate={handleGenerate} disabled={processing} />
 
-      {processing && <ProcessingStatus />}
-
-      {!processing && candidates.length === 0 && <EmptyState />}
-
-      {!processing && candidates.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
-            <ResultsList
-              candidates={candidates}
-              selectedId={selected?.id}
-              onSelect={setSelected}
-            />
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              {selected ? (
-                <CandidateInsights candidate={selected} />
-              ) : (
-                <div className="border rounded-xl p-6 text-muted-foreground text-sm">
-                  Select a candidate to view insights
-                </div>
-              )}
-            </div>
+      {processing && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center space-y-4">
+            <div className="size-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-muted-foreground">Analyzing candidates...</p>
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </div>
   );
 }

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useMousePosition } from "@/hooks/useScrollEffects";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
+// import { useDebouncedCallback } from "@/hooks/useDebounce";
 import { useIsMobile, usePrefersReducedMotion } from "@/hooks/useMediaQuery";
 
 // Floating 3D Resume Document (Enhanced Scale & Visuals)
@@ -141,26 +141,48 @@ export default function HeroSection() {
   const isMobile = useIsMobile();
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const handleScroll = useDebouncedCallback(() => {
-    if (!containerRef.current) return;
+  // const handleScroll = useDebouncedCallback(() => {
+  //   if (!containerRef.current) return;
     
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const containerHeight = containerRef.current.offsetHeight;
+  //   const scrollY = window.scrollY;
+  //   const windowHeight = window.innerHeight;
+  //   const containerHeight = containerRef.current.offsetHeight;
     
-    const scrollableDistance = containerHeight - windowHeight;
-    const rawProgress = scrollY / scrollableDistance;
-    const progress = Math.min(Math.max(rawProgress, 0), 1);
+  //   const scrollableDistance = containerHeight - windowHeight;
+  //   const rawProgress = scrollY / scrollableDistance;
+  //   const progress = Math.min(Math.max(rawProgress, 0), 1);
     
-    setScrollProgress(progress);
-  }, 16); // ~60fps
+  //   setScrollProgress(progress);
+  // }, 16);
+  // 
+  const handleScroll = () => {
+  if (!containerRef.current) return;
+
+  const scrollY = window.scrollY;
+  const windowHeight = window.innerHeight;
+  const containerHeight = containerRef.current.offsetHeight;
+
+  const scrollableDistance = containerHeight - windowHeight;
+  const rawProgress = scrollY / scrollableDistance;
+  const progress = Math.min(Math.max(rawProgress, 0), 1);
+
+  setScrollProgress(progress);
+};
+
+
+  // useEffect(() => {
+  //   window.addEventListener("scroll", handleScroll, { passive: true });
+  //   handleScroll(); // Initial calculation
+    
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, [handleScroll]);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // Initial calculation
-    
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  handleScroll();
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
 
   // Visual Transformations based on scroll (respect reduced motion)
   const animationMultiplier = prefersReducedMotion ? 0.3 : 1;
@@ -174,24 +196,27 @@ export default function HeroSection() {
         <div className="sticky-hero flex items-center justify-center overflow-hidden h-screen w-full sticky top-0">
           
           {/* Detail: Subtle Noise & Shapes - Monochrome */}
-          <div className="absolute inset-0 z-0 bg-background">
+          <div className="absolute inset-0 z-0 bg-background pointer-events-none">
                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none mix-blend-overlay"></div>
                {/* Gradient Orbs - Primary/Muted only */}
                <div 
-                  className="absolute top-[-20%] left-[20%] w-[80vw] h-[80vw] bg-primary/5 rounded-full blur-[150px] animate-pulse-slow"
-                  style={{ transform: `translate(${normalizedX * 20}px, ${normalizedY * 20}px)` }} 
-               />
+  className="absolute top-[-20%] left-[20%] w-[80vw] h-[80vw] bg-primary/5 rounded-full blur-[150px] animate-pulse-slow pointer-events-none"
+  style={{ transform: `translate(${normalizedX * 20}px, ${normalizedY * 20}px)` }} 
+/>
+
                <div 
-                  className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-muted-foreground/5 rounded-full blur-[150px] animate-pulse-slow delay-1000"
-                  style={{ transform: `translate(${normalizedX * -20}px, ${normalizedY * -20}px)` }}
-               />
+  className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-muted-foreground/5 rounded-full blur-[150px] animate-pulse-slow delay-1000 pointer-events-none"
+  style={{ transform: `translate(${normalizedX * -20}px, ${normalizedY * -20}px)` }}
+/>
+
           </div>
 
           <div className="wrapper relative z-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center h-full px-6 lg:px-12">
             
             {/* Text Content */}
             <div 
-              className="flex flex-col items-center lg:items-start text-center lg:text-left pt-20 lg:pt-0 translation-all duration-300 ease-out"
+              // className="flex flex-col items-center lg:items-start text-center lg:text-left pt-20 lg:pt-0 translation-all duration-300 ease-out"
+              className="relative z-50 flex flex-col items-center lg:items-start text-center lg:text-left pt-20 lg:pt-0 translation-all duration-300 ease-out"
               style={{ 
                 opacity: Math.max(contentOpacity, 0),
                 transform: `translateY(${scrollProgress * -50}px) scale(${1 - scrollProgress * 0.1})`,
@@ -260,9 +285,10 @@ export default function HeroSection() {
               onMouseLeave={() => setIsHovering(false)}
             >
               <div 
-                  className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent blur-[100px] rounded-full opacity-40 animate-pulse-3d mix-blend-multiply" 
-                  style={{ transform: 'scale(1.2)' }}
-              />
+  className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent blur-[100px] rounded-full opacity-40 animate-pulse-3d mix-blend-multiply pointer-events-none"
+  style={{ transform: 'scale(1.2)' }}
+/>
+
               {/* Pass mouse tilt values - Enhanced interaction (disabled on mobile/reduced motion) */}
               <FloatingResume 
                   scale={0.9}

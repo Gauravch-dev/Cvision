@@ -40,7 +40,7 @@ export default function RootLayout({
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <SkipNav />
-            <Header />
+            {!hideFooter && <Header />}
             <main id="main-content" role="main">
               {children}
             </main>

@@ -1,9 +1,10 @@
+import { TestimonialsSection } from "@/components/landing_page/TestimonialsSection";
 import HeroSection from "@/components/landing_page/hero_section";
-import { MiddleSection } from "@/components/landing_page/Middle_section";
-import { ComparisonSection } from "@/components/landing_page/ComparisonSection";
-import { HowItWorks } from "@/components/landing_page/HowItWorks";
-import { SmartParsingSection } from "@/components/landing_page/SmartParsingSection";
-import { MatchEngineSection } from "@/components/landing_page/MatchEngineSection";
+import { ProblemSection } from "@/components/landing_page/ProblemSection";
+import { SolutionSection } from "@/components/landing_page/SolutionSection";
+import { FAQSection } from "@/components/landing_page/FAQSection";
+
+
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -16,14 +17,14 @@ export default async function Home() {
   
   return (
     <div className="min-h-screen overflow-visible">
-      <div className="noise-overlay" />
+      <div className="noise-overlay pointer-events-none" />
 
       <HeroSection />
-      <ComparisonSection />
-      <SmartParsingSection />
-      <MatchEngineSection />
-      <MiddleSection />
-      <HowItWorks />
+      <ProblemSection />
+      <SolutionSection />
+      
+      <TestimonialsSection />
+      <FAQSection />
     </div>
   );
 }

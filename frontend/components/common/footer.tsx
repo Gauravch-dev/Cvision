@@ -1,27 +1,12 @@
 import Link from "next/link";
-import { SparklesIcon } from "lucide-react";
-import { Button } from "../ui/button";
+
 
 export default function Footer() {
   return (
     <footer className="bg-background border-t border-border pt-24 pb-12 relative overflow-hidden">
         
       {/* Massive CTA Section */}
-      <div className="wrapper mb-24 text-center">
-        <h2 className="text-massive leading-[0.8] mb-8">
-            READY?<br/>
-            START NOW
-        </h2>
-        <p className="text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join thousands of recruiters screening smarter, not harder.
-        </p>
-        <Link href="/sign-up">
-            <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-2xl hover:shadow-primary/20 hover:scale-105 transition-all">
-                <SparklesIcon className="w-6 h-6 mr-2" />
-                Get Started for Free
-            </Button>
-        </Link>
-      </div>
+
 
       <div className="wrapper">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16 px-4">

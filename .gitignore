@@ -15,3 +15,4 @@ resume_extractor/parsed_resumes/
 # OS
 .DS_Store
 Thumbs.db
+node_modules

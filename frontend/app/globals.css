@@ -1,9 +1,14 @@
+/**
+ * Enhanced Global CSS with Performance Optimizations
+ * Cvision - AI-Powered Recruitment Platform
+ */
+
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Colors - keeping existing OKLCH values defined in the project */
+  /* Colors - OKLCH color space for perceptual uniformity */
   --color-background: oklch(1 0 0);
   --color-foreground: oklch(0.145 0 0);
 
@@ -18,7 +23,7 @@
   --color-secondary-foreground: oklch(0.205 0 0);
 
   --color-muted: oklch(0.97 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
+  --color-muted-foreground: oklch(0.4 0 0);
   --color-accent: oklch(0.97 0 0);
   --color-accent-foreground: oklch(0.205 0 0);
 
@@ -62,17 +67,27 @@
   /* Shadows */
   --shadow-2xs: 2px 2px 4px 0px hsl(196 83% 10% / 0.07);
   --shadow-xs: 2px 2px 4px 0px hsl(196 83% 10% / 0.07);
-  --shadow-sm: 2px 2px 4px 0px hsl(196 83% 10% / 0.15),
+  --shadow-sm:
+    2px 2px 4px 0px hsl(196 83% 10% / 0.15),
     2px 1px 2px -1px hsl(196 83% 10% / 0.15);
-  --shadow: 2px 2px 4px 0px hsl(196 83% 10% / 0.15),
+  --shadow:
+    2px 2px 4px 0px hsl(196 83% 10% / 0.15),
     2px 1px 2px -1px hsl(196 83% 10% / 0.15);
-  --shadow-md: 2px 2px 4px 0px hsl(196 83% 10% / 0.15),
+  --shadow-md:
+    2px 2px 4px 0px hsl(196 83% 10% / 0.15),
     2px 2px 4px -1px hsl(196 83% 10% / 0.15);
-  --shadow-lg: 2px 2px 4px 0px hsl(196 83% 10% / 0.15),
+  --shadow-lg:
+    2px 2px 4px 0px hsl(196 83% 10% / 0.15),
     2px 4px 6px -1px hsl(196 83% 10% / 0.15);
-  --shadow-xl: 2px 2px 4px 0px hsl(196 83% 10% / 0.15),
+  --shadow-xl:
+    2px 2px 4px 0px hsl(196 83% 10% / 0.15),
     2px 8px 10px -1px hsl(196 83% 10% / 0.15);
   --shadow-2xl: 2px 2px 4px 0px hsl(196 83% 10% / 0.38);
+
+  /* Animation Speeds - Configurable */
+  --animation-speed-slow: 8s;
+  --animation-speed-medium: 4s;
+  --animation-speed-fast: 2s;
 }
 
 /* Dark Mode Variables */
@@ -88,7 +103,7 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted-foreground: oklch(0.85 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -126,10 +141,38 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Performance: Enable hardware acceleration */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Screen reader only class */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only:focus-visible,
+  .sr-only.focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: initial;
+    margin: initial;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }
 
@@ -137,6 +180,8 @@
   /* Basic Layout wrappers */
   .wrapper {
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
+    /* Performance: CSS containment */
+    contain: layout style;
   }
 
   /* TYPOGRAPHY v2 - Editorial Style */
@@ -160,10 +205,12 @@
     height: 100vh;
     width: 100%;
     overflow: hidden;
+    /* Performance: Isolate layer */
+    isolation: isolate;
   }
 
   .hero-scroll-wrapper {
-    height: 250vh; /* Deep enough to allow proper scroll timeline */
+    height: 250vh;
     position: relative;
   }
 
@@ -175,7 +222,7 @@
   /* MECHANICS: Horizontal Scroll Logic */
   .horizontal-scroll-section {
     position: relative;
-    height: 400vh; /* Controls the speed/duration of the horizontal scroll */
+    height: 400vh;
     background-color: var(--background);
   }
 
@@ -197,7 +244,7 @@
     will-change: transform;
   }
 
-  /* VISUALS: Film Grain Texture (No-Images approach for speed) */
+  /* VISUALS: Film Grain Texture */
   .noise-overlay {
     position: fixed;
     top: 0;
@@ -205,9 +252,11 @@
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 50; /* Above most things, below modals */
+    z-index: 40;
     opacity: 0.04;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    /* Performance: Composite layer */
+    will-change: opacity;
   }
 
   .dark .noise-overlay {
@@ -229,17 +278,22 @@
     overflow: hidden;
   }
 
-  /* VISUALS: Premium Glows (Solid Box Shadows, No Gradients) */
+  /* VISUALS: Premium Glows */
   .glow-soft {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05), 0 0 40px rgba(0, 0, 0, 0.02);
+    box-shadow:
+      0 0 20px rgba(0, 0, 0, 0.05),
+      0 0 40px rgba(0, 0, 0, 0.02);
   }
 
   .glow-primary {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 8px 40px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.1),
+      0 8px 40px rgba(0, 0, 0, 0.05);
   }
 
   .dark .glow-soft {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05),
+    box-shadow:
+      0 0 20px rgba(255, 255, 255, 0.05),
       0 0 40px rgba(255, 255, 255, 0.02);
   }
 }
@@ -267,10 +321,205 @@
 
 @layer components {
   .animate-float-slow {
-    animation: float 8s ease-in-out infinite;
+    animation: float var(--animation-speed-slow) ease-in-out infinite;
   }
 
   .animate-pulse-3d {
-    animation: pulse3D 4s ease-in-out infinite;
+    animation: pulse3D var(--animation-speed-medium) ease-in-out infinite;
   }
+
+  /* CHAOS ANIMATIONS */
+  .animate-float-chaos {
+    animation: float-chaos 3s ease-in-out infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 12s linear infinite;
+  }
+
+  .animate-suck-in {
+    animation: suck-in 2s ease-in forwards;
+  }
+
+  .animate-bias-flow {
+    animation: bias-flow 6s linear infinite;
+  }
+
+  .animate-bias-reject {
+    animation: bias-reject 0.5s ease-out forwards;
+  }
+
+  .animate-stamp-impact {
+    animation: stamp-impact 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+      forwards;
+  }
+
+  .animate-glitch-overlay {
+    animation: glitch-overlay 2s steps(2, start) infinite;
+  }
+
+  /* Fade in up animation for hero elements */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  .delay-100 {
+    animation-delay: 0.1s;
+  }
+
+  .delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .delay-300 {
+    animation-delay: 0.3s;
+  }
+
+  .delay-500 {
+    animation-delay: 0.5s;
+  }
+}
+
+/* KEYFRAMES DEFINITIONS */
+@keyframes float-chaos {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  25% {
+    transform: translate(-52%, -54%) rotate(2deg);
+  }
+  50% {
+    transform: translate(-48%, -46%) rotate(-2deg);
+  }
+  75% {
+    transform: translate(-54%, -50%) rotate(1deg);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes suck-in {
+  0% {
+    transform: scale(1) translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) translate(0, 0) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes bias-flow {
+  0% {
+    transform: translateX(100px) scale(0.9) opacity(0);
+  }
+  10% {
+    transform: translateX(0px) scale(1) opacity(1);
+  }
+  90% {
+    transform: translateX(-20px) scale(1) opacity(1);
+  }
+  100% {
+    transform: translateX(-100px) scale(0.9) opacity(0);
+  }
+}
+
+@keyframes bias-reject {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(5px, 5px) rotate(2deg);
+  }
+  50% {
+    transform: translate(-5px, -5px) rotate(-2deg);
+  }
+  75% {
+    transform: translate(5px, -5px) rotate(2deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes stamp-impact {
+  0% {
+    transform: scale(3) rotate(-30deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(0.9) rotate(-12deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-12deg);
+    opacity: 1;
+  }
+}
+
+@keyframes glitch-overlay {
+  0% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  2% {
+    opacity: 0.5;
+    transform: translate(2px, -2px);
+  }
+  4% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  96% {
+    opacity: 0;
+  }
+  98% {
+    opacity: 0.5;
+    transform: translate(-2px, 2px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ACCESSIBILITY: Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .will-change-transform,
+  .scale-element {
+    will-change: auto !important;
+  }
+}
+
+/* Focus visible styles for better keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
 }

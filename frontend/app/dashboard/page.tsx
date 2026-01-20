@@ -7,6 +7,8 @@ import ProcessingStatus from "@/components/dashboard/ProcessingStatus";
 import ResultsList from "@/components/dashboard/ResultsList";
 import CandidateInsights from "@/components/dashboard/CandidateInsights";
 import EmptyState from "@/components/dashboard/EmptyState";
+import LoadingSkeleton from "@/components/dashboard/LoadingSkeleton";
+import { toast } from "sonner";
 
 export interface Candidate {
   id: string;
@@ -26,6 +28,12 @@ export default function DashboardPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState<Candidate | null>(null);
   const [jobRequirementId, setJobRequirementId] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  // Simulate initial load
+  useState(() => {
+    setTimeout(() => setInitialLoading(false), 1000);
+  });
 
   const handleGenerate = async ({
     files,
@@ -42,11 +50,21 @@ export default function DashboardPage() {
     experience: string;
     candidateCount: number;
   }) => {
-    if (!files.length) return;
+    if (!files.length) {
+      toast.error("No files selected", {
+        description: "Please upload at least one resume to continue."
+      });
+      return;
+    }
 
     setProcessing(true);
     setCandidates([]);
     setSelected(null);
+
+    toast.loading("Processing resumes...", {
+      description: "Analyzing candidates and matching requirements",
+      id: "processing-toast"
+    });
 
     try {
       const jobReqResponse = await fetch(
@@ -136,7 +154,19 @@ export default function DashboardPage() {
           }),
         }
       );
+
+      toast.success("Analysis complete!", {
+        description: `Successfully processed ${mockCandidates.length} candidate${mockCandidates.length > 1 ? 's' : ''}`,
+        id: "processing-toast"
+      });
     } catch (error) {
+      console.error("Error processing resumes:", error);
+      
+      toast.error("Processing failed", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        id: "processing-toast"
+      });
+
       if (jobRequirementId) {
         await fetch(
           `http://127.0.0.1:8000/api/job-requirements/${jobRequirementId}`,
@@ -155,6 +185,14 @@ export default function DashboardPage() {
       setProcessing(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <DashboardLayout>
+        <LoadingSkeleton />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

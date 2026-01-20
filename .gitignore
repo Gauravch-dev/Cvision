@@ -16,3 +16,4 @@ resume_extractor/parsed_resumes/
 .DS_Store
 Thumbs.db
 node_modules
+backend/.env

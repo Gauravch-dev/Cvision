@@ -21,7 +21,8 @@ def assign_sections(lines):
             detected = normalize_and_split_header(text)
 
             if not detected:
-                detected = ["other"]
+                # detected = ["other"]
+                detected = current_sections
 
             current_sections = detected
 

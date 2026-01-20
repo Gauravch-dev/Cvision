@@ -1,3 +1,17 @@
-node_modules
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Outputs / generated files
+resume_extractor/output/
+resume_extractor/*.json
+resume_extractor/*.jsonl
+
+# Local data
+resume_extractor/resumes/
+resume_extractor/parsed_resumes/
+
+# OS
 .DS_Store
-.env
+Thumbs.db

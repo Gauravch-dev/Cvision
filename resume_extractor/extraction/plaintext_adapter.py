@@ -1,5 +1,5 @@
-import re
-
+import re,sys,os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 SECTION_PATTERNS = {
     "education": re.compile(r"\bEDUCATION\b", re.I),
     "experience": re.compile(r"\bWORK EXPERIENCE\b|\bEXPERIENCE\b", re.I),
@@ -7,6 +7,28 @@ SECTION_PATTERNS = {
     "projects": re.compile(r"\bPROJECTS\b", re.I),
     "certifications": re.compile(r"\bCERTIFICATIONS\b", re.I),
 }
+def plaintext_to_lines(text: str):
+    lines = []
+
+    for i, raw in enumerate(text.splitlines()):
+        t = raw.strip()
+        if not t:
+            continue
+
+        lines.append({
+            "line_id": f"pt_{i}",
+            "page": 0,
+            "text": t,
+            "x0": 0,
+            "x1": 0,
+            "top": i * 10,
+            "bottom": i * 10 + 5,
+            "is_bullet": t.startswith(("-", "•", "*")),
+            "is_section_header": False,
+            "section": "other",
+        })
+
+    return lines
 
 def adapt_plaintext_lines(lines):
     """

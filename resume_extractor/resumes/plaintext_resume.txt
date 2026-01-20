@@ -1,0 +1,31 @@
+GAURAV CHOITHRAMANI
++91 7045037424 |Navi Mumbai, India |gauravlan.ch@gmail.com
+EDUCATION
+FCRIT, Vashi 2024 – 2027
+B.Tech in Computer Engineering CGPA: 9.7
+Pillai HOC College, Rasayani 2021 – 2024
+Diploma in Computer Engineering 91.37%
+St. Joseph High School, Panvel 2020 – 2021
+Secondary Education (Class X, CBSE) 78.6%
+EXPERIENCE
+Software Developer Intern Jan 2017 - Jan 2019
+Quasco Consulting Panvel, Navi Mumbai
+•Developed full-stack applications using React, Bootstrap, Spring Boot, and SQL, including a Library Manage-
+ment System and Job Portal with role-based access, authentication, and CRUD operations
+•Built the frontend of a smart substation maintenance chatbot in ReactJS and Bootstrap, integrating with Python
+FastAPI and NLP models for real-time responses
+•Gained experience in REST API integration, database management, and responsive UI design, improving us-
+ability and efficiency of applications.
+PROJECTS
+Student Management System Built a Library Management System using React, Bootstrap, Spring Boot, and
+SQL, with features like login/registration, book issue/return, and a dynamic dashboard. Also contributed to backend
+development with REST APIs, validation, and database integration
+Job Portal Built a Job Portal using React, Bootstrap, Spring Boot, and SQL, implementing job posting, user
+login/registration, application tracking, and role-based access.
+SKILLS
+Programming Languages Java, C, C++, Python
+Backend PHP,SpringBoot, Spring framework,JDBC,Hibernate
+Database and tools MySQL, Git, GitHub, Docker
+RELEVANT COURSEWORK
+Data Structures & Algorithms Database Management Computer Networking
+Operating Systems Object-Oriented Programming Machine Learning

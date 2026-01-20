@@ -38,8 +38,8 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <div className="flex flex-col h-screen w-64 border-r bg-background/50 backdrop-blur-xl border-border fixed left-0 top-0 z-30">
-            <div className="p-6 border-b border-border/50 flex-shrink-0">
+        <div className="flex flex-col h-screen w-64 border-r bg-background/50 backdrop-blur-xl border-border fixed left-0 top-0 z-30 overflow-y-auto">
+            <div className="p-6 border-b border-border/50 flex-shrink-0 sticky top-0 z-40 bg-background/50 backdrop-blur-xl">
                 <Link href="/" className="flex items-center gap-2">
                     <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Files className="size-5 text-primary" />
@@ -48,7 +48,7 @@ export function Sidebar() {
                 </Link>
             </div>
 
-            <div className="flex-1 py-6 px-4 space-y-2 overflow-y-auto min-h-0">
+            <div className="py-6 px-4 space-y-2 min-h-0 flex-1">
                 {sidebarItems.map((item) => {
                     const isActive = item.startsWith
                         ? pathname.startsWith(item.href)
@@ -72,7 +72,7 @@ export function Sidebar() {
                 })}
             </div>
 
-            <div className="p-4 border-t border-border/50 flex-shrink-0 bg-background backdrop-blur-xl">
+            <div className="p-4 border-t border-border/50 flex-shrink-0 bg-background backdrop-blur-xl sticky bottom-0 z-40 mt-auto">
                 <SignOutButton>
                     <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                         <LogOut className="size-4" />

@@ -60,20 +60,71 @@ export default function DashboardPage() {
     });
 
     try {
-      // Store job data
+      // 1. Generate Job Embeddings
+      let jobEmbeddings = null;
+      try {
+        const embedResponse = await fetch("http://127.0.0.1:8000/embed-job", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jobTitle,
+            jobDescription,
+            skills,
+            experience
+          }),
+        });
+
+        if (!embedResponse.ok) {
+          throw new Error(`Job embedding failed: ${embedResponse.statusText}`);
+        }
+
+        const embedData = await embedResponse.json();
+        jobEmbeddings = embedData.embeddings;
+        console.log("Job Embeddings generated.");
+
+      } catch (err) {
+        console.error("Failed to generate job embeddings", err);
+        toast.error("Analysis Failed", {
+          description: "Visual AI Service is offline. Please check Python backend.",
+          id: "processing-toast"
+        });
+        setProcessing(false);
+        return; // STOP EXECUTION
+      }
+
+      // 2. Upload & Parse Resumes
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+          const res = await fetch("http://127.0.0.1:8000/extract-resume", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          return { file: file.name, success: true, db_id: data.db_id };
+        } catch (e) {
+          console.error(`Failed to upload ${file.name}`, e);
+          return { file: file.name, success: false };
+        }
+      });
+
+      await Promise.all(uploadPromises);
+      console.log("All resumes processed.");
+
+      // 3. Store Job Data in Backend
       setJobData({
         jobTitle,
         jobDescription,
         skills,
         experience,
-        location: "Bangalore, India", // Can make this dynamic later
-        salaryRange: "₹12L - ₹20L" // Can make this dynamic later
+        location: "Bangalore, India",
+        salaryRange: "₹12L - ₹20L"
       });
 
-      // Try backend connection (optional)
       try {
         const jobReqResponse = await fetch(
-          "http://127.0.0.1:8000/api/job-requirements",
+          "http://127.0.0.1:5000/api/job-requirements",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -84,93 +135,89 @@ export default function DashboardPage() {
               experience,
               candidateCount,
               resumeCount: files.length,
+              embeddings: jobEmbeddings // Save embeddings too
             }),
           }
         );
 
         if (jobReqResponse.ok) {
           const jobReqData = await jobReqResponse.json();
-          console.log("Job saved:", jobReqData.data._id);
+          const jobId = jobReqData.data._id;
+          console.log("Job saved:", jobId);
+
+          // 4. Fetch Real Recommendations
+          toast.loading("Calculating match scores...", { id: "processing-toast" }); // This toast should appear
+
+          console.log(`Fetching recommendations for Job ID: ${jobId}`);
+          const recResponse = await fetch(`http://127.0.0.1:5000/api/recommendations/${jobId}`);
+          console.log("Recommendation response received:", recResponse.status);
+
+          if (recResponse.ok) {
+            const recData = await recResponse.json();
+            const matches = recData.data;
+
+            // Map Backend Data to Frontend Interface
+            const realCandidates: CandidateProfile[] = matches.map((match: any, index: number) => {
+              const pData = match.parsed_data || {};
+              const pInfo = pData.personal_info || {};
+
+              // Safe defaults
+              const name = pInfo.name || match.filename || `Candidate ${index + 1}`;
+              const email = pInfo.email || "No email";
+              const phone = pInfo.phone || "No phone";
+              // Try to find most recent role
+              const lastRole = pData.work_experience?.[0]?.job_title || "Applicant";
+              const totalExp = pData.total_experience || 0;
+
+              return {
+                id: match._id,
+                name: name,
+                title: lastRole, // Could map to specific title
+                location: pInfo.address || "Unknown Location",
+                experience: typeof totalExp === 'number' ? totalExp : parseFloat(totalExp) || 0,
+                salaryRange: "Not disclosed", // Not extracted currently
+                score: match.matchScore,
+                contact: { email, phone },
+                about: `Matched for ${jobTitle} position. Skills matched: ${match.matchDetails?.skills}%`,
+                skills: (Array.isArray(pData.skills)
+                  ? pData.skills
+                  : typeof pData.skills === 'string'
+                    ? pData.skills.split(',').map((s: string) => s.trim())
+                    : []).slice(0, 10), // Limit bubbles
+                radarScores: {
+                  skills: match.matchDetails?.skills || 0,
+                  experience: match.matchDetails?.experience || 0,
+                  communication: match.matchDetails?.phrases || 0, // Mapping phrases to communication proxy
+                  culture: match.matchDetails?.phrases || 0, // Mapping phrases to culture proxy
+                  roleFit: match.matchDetails?.full_text || 0,
+                },
+              };
+            });
+
+            setCandidates(realCandidates);
+            setViewState("results");
+
+            toast.success("Analysis complete!", {
+              description: `Successfully analyzed ${files.length} resumes. Found ${realCandidates.length} matches.`,
+              id: "processing-toast"
+            });
+          } else {
+            throw new Error("Failed to fetch recommendations");
+          }
+
+        } else {
+          throw new Error("Failed to save job requirement");
         }
       } catch (backendError) {
-        console.log("Backend not available, using mock data");
-      }
-
-      // Generate enriched candidate profiles
-      const skillsList = skills.split(',').map(s => s.trim()).filter(Boolean);
-      const candidateNames = [
-        "Sarah Chen", "Alex Martinez", "James Wilson", "Priya Sharma",
-        "Michael Brown", "Emily Davis", "Raj Patel", "Lisa Anderson",
-        "David Kim", "Jessica Taylor"
-      ];
-
-      const titles = [
-        `Senior ${jobTitle}`, `Lead ${jobTitle}`, jobTitle,
-        `${jobTitle} II`, `${jobTitle} III`
-      ];
-
-      const locations = [
-        "Mumbai, India", "Bangalore, India", "Pune, India",
-        "Delhi, India", "Hyderabad, India"
-      ];
-
-      const mockCandidates: CandidateProfile[] = files
-        .slice(0, Math.min(files.length, candidateCount))
-        .map((file, index) => {
-          const baseScore = 95 - (index * 7);
-          const actualScore = Math.max(62, baseScore + Math.floor(Math.random() * 8));
-          const matchedSkillsCount = Math.max(1, skillsList.length - Math.floor(index / 2));
-          const yearsExp = 2 + index + Math.floor(Math.random() * 4);
-
-          return {
-            id: `candidate-${index + 1}`,
-            name: candidateNames[index % candidateNames.length],
-            title: titles[index % titles.length],
-            location: locations[index % locations.length],
-            experience: yearsExp,
-            salaryRange: `₹${8 + index * 2}L - ₹${14 + index * 3}L`,
-            score: actualScore,
-            contact: {
-              email: `${candidateNames[index % candidateNames.length].toLowerCase().replace(' ', '.')}@example.com`,
-              phone: `+91 ${90000 + index * 1111} ${10000 + index * 111}`,
-            },
-            about: index === 0
-              ? `${yearsExp}+ years of experience in ${jobTitle.toLowerCase()}. Strong background in ${skillsList.slice(0, 3).join(', ')}. Proven track record of delivering high-quality solutions and leading cross-functional teams.`
-              : `Experienced ${jobTitle.toLowerCase()} with ${yearsExp} years in the industry. Skilled in ${skillsList.slice(0, 2).join(' and ')}. Passionate about creating impactful solutions and continuous learning.`,
-            skills: [
-              ...skillsList.slice(0, matchedSkillsCount),
-              ...(index === 0 ? ["Leadership", "Problem Solving", "Agile"] :
-                index === 1 ? ["Team Player", "Communication", "CI/CD"] :
-                  index === 2 ? ["Code Review", "Mentoring"] :
-                    ["Collaboration"])
-            ],
-            radarScores: {
-              skills: Math.min(100, actualScore + Math.floor(Math.random() * 10)),
-              experience: Math.min(100, 70 + yearsExp * 5 + Math.floor(Math.random() * 10)),
-              communication: Math.min(100, 75 + Math.floor(Math.random() * 20)),
-              culture: Math.min(100, 80 + Math.floor(Math.random() * 15)),
-              roleFit: Math.min(100, actualScore - 5 + Math.floor(Math.random() * 10)),
-            },
-          };
+        console.error("Backend Error:", backendError);
+        toast.error("Analysis Failed", {
+          description: "Could not retrieve recommendations. Ensure backend is running.",
+          id: "processing-toast"
         });
-
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      setCandidates(mockCandidates);
-      setViewState("results");
-
-      toast.success("Analysis complete!", {
-        description: `Successfully analyzed ${mockCandidates.length} candidate${mockCandidates.length > 1 ? 's' : ''}`,
-        id: "processing-toast"
-      });
+      }
     } catch (error) {
-      console.error("Error processing resumes:", error);
-
-      toast.error("Processing failed", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        id: "processing-toast"
-      });
+      console.error("Processing Error:", error);
+      toast.error("An unexpected error occurred");
     } finally {
       setProcessing(false);
     }

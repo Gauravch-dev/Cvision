@@ -224,6 +224,14 @@ export default function UploadPanel({
               placeholder="Type to search skills (e.g. React, Python, AWS)..."
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (skillInput.trim()) {
+                    addSkill(skillInput.trim());
+                  }
+                }
+              }}
             />
 
             <div className="flex flex-wrap gap-2">

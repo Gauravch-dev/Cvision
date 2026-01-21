@@ -14,6 +14,7 @@ router.post('/', async (req, res) => {
       experience,
       candidateCount,
       resumeCount,
+      embeddings,
     } = req.body;
 
     // Validation
@@ -25,7 +26,7 @@ router.post('/', async (req, res) => {
     }
 
     // Parse skills if it's a string
-    const skillsArray = typeof skills === 'string' 
+    const skillsArray = typeof skills === 'string'
       ? skills.split(',').map(s => s.trim()).filter(Boolean)
       : skills;
 
@@ -37,6 +38,7 @@ router.post('/', async (req, res) => {
       experience,
       candidateCount: candidateCount || 5,
       resumeCount: resumeCount || 0,
+      embeddings,
     });
 
     await jobRequirement.save();
@@ -48,7 +50,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating job requirement:', error);
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);

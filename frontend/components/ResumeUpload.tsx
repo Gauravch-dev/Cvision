@@ -23,6 +23,9 @@ export default function ResumeUpload() {
     });
 
     const json = await res.json();
+    if (json.db_id) {
+      console.log("Resume saved to DB with ID:", json.db_id);
+    }
     const grouped = groupResumeLines(json.data);
 
     setResumeData(grouped);

@@ -16,7 +16,7 @@ const jobRequirementSchema = new mongoose.Schema(
       type: [String],
       required: [true, 'At least one skill is required'],
       validate: {
-        validator: function(arr) {
+        validator: function (arr) {
           return arr.length > 0;
         },
         message: 'Skills array cannot be empty'
@@ -41,6 +41,10 @@ const jobRequirementSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed'],
       default: 'pending',
+    },
+    embeddings: {
+      type: Object, // Store the vectors map
+      required: false,
     },
   },
   {

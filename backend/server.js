@@ -16,14 +16,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/job-requirements', jobRequirementsRouter);
+app.use('/api/recommendations', require('./routes/recommendation'));
 
 // Your existing routes
 // app.post('/extract-resume', ...); // Keep your existing routes
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'Server is running',
     database: 'connected'
   });

@@ -39,8 +39,8 @@ const jobRequirementSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'processing', 'completed', 'failed'],
-      default: 'pending',
+      enum: ['pending', 'processing', 'completed', 'failed', 'online', 'offline'],
+      default: 'online',
     },
     embeddings: {
       type: Object, // Store the vectors map

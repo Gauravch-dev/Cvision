@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const jobRequirementSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      required: [true, 'User ID is required for multi-tenancy'],
+      index: true, // Index for fast filtering by user
+    },
     jobTitle: {
       type: String,
       required: [true, 'Job title is required'],

@@ -4,6 +4,8 @@ const cors = require('cors');
 const connectDB = require('./config/database');
 const jobRequirementsRouter = require('./routes/jobRequirements');
 
+const path = require('path');
+
 const app = express();
 
 // Connect to MongoDB
@@ -13,6 +15,7 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/resumes', express.static(path.join(__dirname, 'saved_resumes')));
 
 // Routes
 app.use('/api/job-requirements', jobRequirementsRouter);

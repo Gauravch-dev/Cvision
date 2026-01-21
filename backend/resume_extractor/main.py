@@ -1,8 +1,9 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 from pymongo import MongoClient, errors
+from bson import ObjectId
 from dotenv import load_dotenv
 import uuid
 from datetime import datetime
@@ -28,6 +29,8 @@ if os.path.exists(backend_env_path):
 else:
     print("[DEBUG] .env file NOT FOUND")
 
+from fastapi.staticfiles import StaticFiles
+
 app = FastAPI()
 
 app.add_middleware(
@@ -38,8 +41,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = "saved_resumes"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Serve saved resumes statically
+app.mount("/resumes", StaticFiles(directory=UPLOAD_DIR), name="resumes")
 
 # Database Setup
 MONGO_URI = os.getenv("MONGODB_URI")
@@ -83,26 +89,59 @@ print("[INFO] Loading AI Model... this may take a moment")
 embedder = Embedder(device="cpu")
 print("[INFO] AI Model Loaded")
 
+import hashlib
+from fastapi.concurrency import run_in_threadpool
+
 @app.post("/extract-resume")
-async def extract_resume_endpoint(file: UploadFile = File(...)):
+async def extract_resume_endpoint(
+    file: UploadFile = File(...), 
+    job_id: str = Form(None), # Accept job_id from frontend (multipart/form-data)
+    user_id: str = Form(None) # Multi-tenancy: Associate resume with user
+):
     global db
     if db is None:
         print("[INFO] Database handle missing, attempting to reconnect...")
         connect_db()
 
-    file_path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}_{file.filename}")
+    # --- DEDUPLICATION START ---
+    # 1. Compute File Hash
+    file_content = await file.read()
+    file_hash = hashlib.md5(file_content).hexdigest()
+    
+    # 2. Check if hash exists in DB
+    if db is not None:
+        existing_doc = db["parsed_resumes"].find_one({"file_hash": file_hash, "jobId": job_id})
+        if existing_doc:
+            print(f"[INFO] Duplicate Resume Found (Hash: {file_hash}). Returning existing data.")
+            return {
+                "success": True,
+                "data": existing_doc.get("parsed_data"),
+                "db_id": str(existing_doc.get("_id")),
+                "stored_filename": existing_doc.get("stored_filename"),
+                "is_duplicate": True
+            }
+
+    # 3. Reset Cursor for Saving
+    await file.seek(0)
+    # --- DEDUPLICATION END ---
+
+    # Save with UUID to prevent collisions
+    stored_filename = f"{uuid.uuid4()}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, stored_filename)
 
     try:
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # 1. Parse/Extract
-        structured_data = pipeline_extract(file_path)
-    finally:
-        # Cleanup: Delete the temporary file
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print(f"[INFO] Cleaned up temp file: {file_path}")
+        # 1. Parse/Extract (Run in threadpool to unblock event loop)
+        structured_data = await run_in_threadpool(pipeline_extract, file_path)
+        
+        # NOTE: File is KEPT for download access (no finally/cleanup block)
+        print(f"[INFO] Persisting file at: {file_path}")
+
+    except Exception as e:
+        print(f"[ERROR] Extraction failed: {e}")
+        return {"success": False, "error": str(e)}
 
     # 2. Embed
     views = resume_to_views(structured_data)
@@ -120,7 +159,11 @@ async def extract_resume_endpoint(file: UploadFile = File(...)):
     if db is not None:
         print("[DEBUG] Attempting to insert into MongoDB...")
         resume_doc = {
+            "userId": user_id,     # Multi-tenancy: Link to user
+            "jobId": job_id,           # Link to specific Job ID
             "filename": file.filename,
+            "stored_filename": stored_filename, # 🆕 Saved on disk name
+            "file_hash": file_hash,    # 🆕 Deduplication Key
             "uploadDate": datetime.utcnow(),
             "parsed_data": structured_data,
             "embeddings": embeddings_map,
@@ -130,7 +173,23 @@ async def extract_resume_endpoint(file: UploadFile = File(...)):
         try:
             result = db["parsed_resumes"].insert_one(resume_doc)
             doc_id = str(result.inserted_id)
-            print(f"[INFO] Saved resume to MongoDB with ID: {doc_id}")
+            print(f"[INFO] Saved resume to MongoDB with ID: {doc_id} for Job: {job_id}")
+
+            # 4. Increment Resume Count on Job Requirement
+            if job_id:
+                try:
+                    # Fix: Ensure logic handles cases where resumeCount field might not initialy exist
+                    update_result = db["jobrequirements"].update_one(
+                        {"_id": ObjectId(job_id)},
+                        {"$inc": {"resumeCount": 1}}
+                    )
+                    if update_result.modified_count > 0:
+                        print(f"[INFO] Incremented resumeCount for Job: {job_id}")
+                    else:
+                        print(f"[WARN] Job ID {job_id} not found or count not updated")
+                except Exception as e:
+                    print(f"[ERROR] Failed to increment resumeCount: {e}")
+
         except Exception as e:
             print(f"[ERROR] Error saving to MongoDB: {e}")
     else:
@@ -139,7 +198,8 @@ async def extract_resume_endpoint(file: UploadFile = File(...)):
     return {
         "success": True,
         "data": structured_data,
-        "db_id": doc_id
+        "db_id": doc_id,
+        "stored_filename": stored_filename # Return this so frontend knows the URL immediately if needed
     }
 
 from pydantic import BaseModel

@@ -44,3 +44,52 @@ If you want to know how it works inside:
 *   **Database:** MongoDB (Where we keep the info)
 
 We used **Vector Search** (math with arrows) to find the best matches. It's like finding two stars that are close to each other in the sky. ✨
+
+---
+
+## 🔌 API & Integration Guide (For HR Systems)
+
+Want to connect **Workday**, **Greenhouse**, or your own portal to Cvision? 
+Our API makes it easy to auto-parse resumes without human clicks.
+
+### **The Endpoint**
+`POST /extract-resume`
+
+### **Python Example (How to call it)**
+```python
+import requests
+
+# 1. The Resume File
+files = {'file': open('resume.pdf', 'rb')}
+
+# 2. The Job ID (Optional, to link it)
+data = {'job_id': 'JOB-12345'}
+
+# 3. Send it to Cvision
+response = requests.post('http://localhost:8000/extract-resume', files=files, data=data)
+
+# 4. Get the Magic Result (Standard JSON)
+print(response.json())
+```
+
+### **Sample Response**
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "location": "New York, USA"
+    },
+    "skills": {
+      "languages": ["Python", "JavaScript"],
+      "ai_detected": ["Docker", "AWS"]
+    }
+  },
+  "stored_filename": "uuid_resume.pdf"
+}
+```
+
+### **Interactive Docs**
+Visit `http://localhost:8000/docs` to see the full Swagger UI and test endpoints directly in your browser.

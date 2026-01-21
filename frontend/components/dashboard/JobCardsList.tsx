@@ -19,9 +19,10 @@ interface JobCardsListProps {
     onUploadResumes: (job: JobRequirement) => void;
     onViewProfile: (job: JobRequirement) => void;
     onStatusChange: (job: JobRequirement, status: string) => void;
+    isArchived?: boolean; // 🆕 Added prop
 }
 
-export default function JobCardsList({ jobs, onUploadResumes, onViewProfile, onStatusChange }: JobCardsListProps) {
+export default function JobCardsList({ jobs, onUploadResumes, onViewProfile, onStatusChange, isArchived = false }: JobCardsListProps) {
     const getRelativeTime = (date: string) => {
         const now = new Date();
         const created = new Date(date);
@@ -176,13 +177,15 @@ export default function JobCardsList({ jobs, onUploadResumes, onViewProfile, onS
 
                         {/* Premium action buttons */}
                         <div className="flex gap-3">
-                            <button
-                                onClick={() => onUploadResumes(job)}
-                                className="flex-1 bg-primary text-primary-foreground px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 hover:brightness-110 flex items-center justify-center gap-2 group"
-                            >
-                                <Upload className="size-4 group-hover:rotate-12 transition-transform duration-300" />
-                                <span>Upload Resumes</span>
-                            </button>
+                            {!isArchived && (
+                                <button
+                                    onClick={() => onUploadResumes(job)}
+                                    className="flex-1 bg-primary text-primary-foreground px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 hover:brightness-110 flex items-center justify-center gap-2 group"
+                                >
+                                    <Upload className="size-4 group-hover:rotate-12 transition-transform duration-300" />
+                                    <span>Upload Resumes</span>
+                                </button>
+                            )}
                             <button
                                 onClick={() => onViewProfile(job)}
                                 className="flex-1 bg-transparent border border-border/80 text-foreground px-4 py-3.5 rounded-xl font-medium hover:bg-muted/50 hover:border-primary/40 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 group/view"

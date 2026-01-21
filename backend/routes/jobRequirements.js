@@ -8,6 +8,7 @@ const JobRequirement = require('../models/JobRequirement');
 router.post('/', async (req, res) => {
   try {
     const {
+      userId,
       jobTitle,
       jobDescription,
       skills,
@@ -18,10 +19,10 @@ router.post('/', async (req, res) => {
     } = req.body;
 
     // Validation
-    if (!jobTitle || !jobDescription || !skills || !experience) {
+    if (!userId || !jobTitle || !jobDescription || !skills || !experience) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide all required fields',
+        message: 'Please provide all required fields (including userId)',
       });
     }
 
@@ -32,6 +33,7 @@ router.post('/', async (req, res) => {
 
     // Create job requirement
     const jobRequirement = new JobRequirement({
+      userId, // Multi-tenancy: Link to user
       jobTitle,
       jobDescription,
       skills: skillsArray,
@@ -74,7 +76,12 @@ router.post('/', async (req, res) => {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const jobRequirements = await JobRequirement.find()
+    const { userId } = req.query;
+
+    // Build query filter
+    const filter = userId ? { userId } : {};
+
+    const jobRequirements = await JobRequirement.find(filter)
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -150,6 +157,47 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while updating job requirement',
+    });
+  }
+});
+
+// @route   PATCH /api/job-requirements/:id/recalculate-count
+// @desc    Recalculate resumeCount from actual parsed_resumes in DB
+// @access  Public
+router.patch('/:id/recalculate-count', async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const mongoose = require('mongoose');
+
+    // Count resumes in parsed_resumes collection for this jobId
+    const count = await mongoose.connection.db
+      .collection('parsed_resumes')
+      .countDocuments({ jobId: jobId });
+
+    // Update the jobRequirement with the new count
+    const jobRequirement = await JobRequirement.findByIdAndUpdate(
+      jobId,
+      { resumeCount: count },
+      { new: true }
+    );
+
+    if (!jobRequirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job requirement not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Resume count recalculated: ${count}`,
+      data: jobRequirement,
+    });
+  } catch (error) {
+    console.error('Error recalculating resume count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while recalculating resume count',
     });
   }
 });

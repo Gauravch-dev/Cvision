@@ -26,7 +26,7 @@ def resume_to_views(resume: Dict[str, Any]) -> Dict[str, str]:
     skills = resume.get("skills", {}) or {}
     # your categorized skills: languages/frameworks/databases/cloud_devops/concepts
     skills_parts = []
-    for k in ["languages", "frameworks", "databases", "cloud_devops", "concepts"]:
+    for k in ["languages", "frameworks", "databases", "cloud_devops", "concepts", "ai_detected"]:
         vals = skills.get(k, []) or []
         if vals:
             skills_parts.append(f"{k}: " + ", ".join([str(v) for v in vals]))

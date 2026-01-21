@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useUser } from "@clerk/nextjs"; // Multi-tenancy: Get current user
 import { X, Upload, FileText, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import type { JobRequirement } from "./JobCardsList";
@@ -18,6 +19,7 @@ export default function RecruiterResumeModal({
     job,
     onSuccess,
 }: ResumeUploadModalProps) {
+    const { user } = useUser(); // Multi-tenancy: Get current user
     const [files, setFiles] = useState<File[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -78,6 +80,10 @@ export default function RecruiterResumeModal({
             const uploadPromises = files.map(async (file) => {
                 const formData = new FormData();
                 formData.append("file", file);
+                formData.append("job_id", job._id); // 🔗 Link resume to this specific job
+                if (user?.id) {
+                    formData.append("user_id", user.id); // Multi-tenancy: Associate with user
+                }
 
                 const res = await fetch("http://127.0.0.1:8000/extract-resume", {
                     method: "POST",
@@ -90,7 +96,10 @@ export default function RecruiterResumeModal({
 
             await Promise.all(uploadPromises);
 
-            toast.loading("Calculating match scores...", { id: "upload-resumes" });
+            toast.loading("Indexing & Analyzing...", { id: "upload-resumes" });
+
+            // WAIT for Vector Indexing (Atlas can take 2-3s to become searchable)
+            await new Promise(resolve => setTimeout(resolve, 3500));
 
             // Fetch recommendations (EXISTING LOGIC - SAME AS CURRENT)
             const recResponse = await fetch(`http://127.0.0.1:5000/api/recommendations/${job._id}`);

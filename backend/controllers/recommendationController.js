@@ -42,12 +42,18 @@ exports.getRecommendations = async (req, res) => {
                     path: "embeddings.full_text",
                     queryVector: job.embeddings.full_text,
                     numCandidates: 100, // Number of nearest neighbors to find in the index
-                    limit: 50           // Return top 50 for in-memory reranking
+                    limit: 100          // Fetch more candidates initially to allow filtering
+                }
+            },
+            {
+                $match: {
+                    jobId: jobId // 🔒 STRICT FILTER: Only show candidates for THIS job
                 }
             },
             {
                 $project: {
                     filename: 1,
+                    stored_filename: 1, // 🆕 Include stored_filename for download link
                     parsed_data: 1,
                     embeddings: 1, // Need all embeddings for reranking
                     score: { $meta: "vectorSearchScore" }
@@ -88,6 +94,7 @@ exports.getRecommendations = async (req, res) => {
             return {
                 _id: candidate._id,
                 filename: candidate.filename,
+                stored_filename: candidate.stored_filename, // 🆕 Return to frontend
                 parsed_data: candidate.parsed_data,
                 matchScore: Math.round(Math.max(0, finalScore * 100)), // Convert to 0-100%
                 matchDetails: {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useUser } from "@clerk/nextjs"; // Multi-tenancy: Get current user
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ interface JobFormProps {
 }
 
 export default function RecruiterJobForm({ onSuccess }: JobFormProps) {
+    const { user } = useUser(); // Multi-tenancy: Get logged-in user
     const [jobTitle, setJobTitle] = useState("");
     const [jobDescription, setJobDescription] = useState("");
     const [skillInput, setSkillInput] = useState("");
@@ -71,6 +73,7 @@ export default function RecruiterJobForm({ onSuccess }: JobFormProps) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    userId: user?.id, // Multi-tenancy: Link job to current user
                     jobTitle,
                     jobDescription,
                     skills: selectedSkills.join(", "),

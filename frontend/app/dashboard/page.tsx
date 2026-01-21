@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs"; // Multi-tenancy: Get current user
 import RecruiterJobForm from "@/components/dashboard/RecruiterJobForm";
 import JobCardsList, { JobRequirement } from "@/components/dashboard/JobCardsList";
 import RecruiterResumeModal from "@/components/dashboard/RecruiterResumeModal";
@@ -22,6 +23,7 @@ interface JobData {
 }
 
 export default function DashboardPage() {
+  const { user, isLoaded } = useUser(); // Multi-tenancy: Get current user
   const [viewState, setViewState] = useState<ViewState>("cards");
   const [initialLoading, setInitialLoading] = useState(true);
   const [jobs, setJobs] = useState<JobRequirement[]>([]);
@@ -40,15 +42,18 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (viewState === "cards") {
+    if (viewState === "cards" && isLoaded && user?.id) {
       fetchJobs();
     }
-  }, [viewState]);
+  }, [viewState, isLoaded, user?.id]);
 
   const fetchJobs = async () => {
+    if (!user?.id) return; // Multi-tenancy: Require user ID
+
     setLoadingJobs(true);
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/job-requirements");
+      // Multi-tenancy: Filter by current user's ID
+      const response = await fetch(`http://127.0.0.1:5000/api/job-requirements?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setJobs(data.data || []);
@@ -140,72 +145,52 @@ export default function DashboardPage() {
 
     let candidateData = matches && matches.length > 0 ? matches : [];
 
-    // Fallback: If no matches found, use MOCK DATA for DEMO
-    // This ensures the user ALWAYS sees cards even if the backend returns nothing.
+    // Fallback: If no matches found, do NOT generate mock data.
+    // User wants REAL TIME data. If 0 matches, show 0 matches.
     if (candidateData.length === 0) {
-      console.log("No backend matches found. Generating MOCK data for demo.");
-      candidateData = Array.from({ length: 12 }, (_, i) => ({
-        _id: `mock-${i}`,
-        matchScore: Math.floor(Math.random() * (95 - 70 + 1)) + 70,
-        matchDetails: {
-          skills: Math.floor(Math.random() * (95 - 60 + 1)) + 60,
-          experience: Math.floor(Math.random() * (95 - 60 + 1)) + 60,
-          communication: Math.floor(Math.random() * (95 - 60 + 1)) + 60,
-          culture: Math.floor(Math.random() * (95 - 60 + 1)) + 60,
-          roleFit: Math.floor(Math.random() * (95 - 60 + 1)) + 60
-        },
-        parsed_data: {
-          personal_info: {
-            name: `Mock Candidate ${i + 1}`,
-            email: `candidate${i + 1}@example.com`,
-            phone: "+1 555-0123",
-            address: ["New York, NY", "San Francisco, CA", "Remote", "London, UK"][Math.floor(Math.random() * 4)]
-          },
-          total_experience: Math.floor(Math.random() * 15) + 2,
-          skills: ["React", "Node.js", "TypeScript", "Python", "AWS", "Docker"].sort(() => 0.5 - Math.random()).slice(0, 4),
-          work_experience: [{ job_title: "Senior Developer" }]
-        }
-      }));
+      console.log("No backend matches found. Showing empty state.");
+      // We keep candidateData as []
     }
 
     // Map results to candidate profiles (EXISTING LOGIC - SAME AS CURRENT)
     const mappedCandidates: CandidateProfile[] = candidateData.map((match: any, index: number) => {
       const pData = match.parsed_data || {};
-      const pInfo = pData.personal_info || {};
+      // 🐛 FIX: Backend returns 'profile', not 'personal_info'
+      const pInfo = pData.profile || pData.personal_info || {};
 
-      const name = pInfo.name || match.filename || `Candidate ${index + 1}`;
+      const name = pInfo.name || match.filename?.replace(/\.[^/.]+$/, "") || `Candidate ${index + 1}`;
       const email = pInfo.email || "No email";
       const phone = pInfo.phone || "No phone";
       const lastRole = pData.work_experience?.[0]?.job_title || "Applicant";
       const totalExp = pData.total_experience || 0;
 
-      // Helper to generate dummy scores for UI visualization (per user request)
-      const getDummyScore = () => Math.floor(Math.random() * (95 - 60 + 1)) + 60;
+      // REAL DATA MAPPING
+      // Use actual backend scores. If missing (0), show 0.
 
-      const skillsScore = match.matchDetails?.skills || getDummyScore();
-      const expScore = match.matchDetails?.experience || getDummyScore();
+      const skillsScore = match.matchDetails?.phrases || 0;
+      const expScore = match.matchDetails?.full_text || 0;
 
       return {
         id: match._id,
         name: name,
         title: lastRole,
-        location: pInfo.address || "Unknown Location",
+        location: pInfo.location || pInfo.address || "Unknown Location",
         experience: typeof totalExp === 'number' ? totalExp : parseFloat(totalExp) || 0,
         salaryRange: "Not disclosed",
-        score: match.matchScore || getDummyScore(),
+        score: match.matchScore || 0,
         contact: { email, phone },
-        about: `Matched for ${job.jobTitle} position. Skills matched: ${skillsScore}%`,
-        skills: (Array.isArray(pData.skills)
-          ? pData.skills
-          : typeof pData.skills === 'string'
-            ? pData.skills.split(',').map((s: string) => s.trim())
-            : []).slice(0, 10),
+        about: pInfo.summary || `Matched for ${job.jobTitle} position. Skills matched: ${skillsScore}%`,
+        resumeUrl: `http://localhost:5000/resumes/${match.stored_filename || match.filename}`,
+        skills: (Array.isArray(pData.skills?.raw) ? pData.skills.raw :
+          Array.isArray(pData.skills) ? pData.skills :
+            typeof pData.skills === 'string' ? pData.skills.split(',').map((s: string) => s.trim()) :
+              (typeof pData.skills === 'object' && pData.skills !== null) ? Object.values(pData.skills).flat() :
+                []).slice(0, 15), // Increased limit slightly to show more breadth
         radarScores: {
           skills: skillsScore,
           experience: expScore,
-          communication: match.matchDetails?.phrases || getDummyScore(),
-          culture: match.matchDetails?.phrases || getDummyScore(),
-          roleFit: match.matchDetails?.full_text || getDummyScore(),
+          education: match.matchDetails?.education || 0, // Actual education
+          certification: match.matchDetails?.skills || 0, // Using actual skills score as proxy for Certification
         },
       };
     });
@@ -221,8 +206,10 @@ export default function DashboardPage() {
     setViewState("analytics");
   };
 
-  const selectedJobData = jobs.find(j => j._id === selectedJob?._id);
+  // FILTERING LOGIC: Strict separation between Active (Online/Pending) and Past (Offline/Closed)
+  // This ensures a job is never visible in both lists simultaneously.
   const activeJobs = jobs.filter(j => j.status === 'online' || j.status === 'pending');
+  const pastJobs = jobs.filter(j => !['online', 'pending'].includes(j.status || '')); // Capture EVERYTHING else (offline, completed, failed, closed)
 
   if (initialLoading) {
     return (
@@ -315,39 +302,25 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Jobs List */}
-      {loadingJobs ? (
-        <div className="flex items-center justify-center py-32 animate-in fade-in duration-300">
-          <div className="text-center space-y-4">
-            <div className="size-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-muted-foreground font-medium">Loading jobs...</p>
+      {/* Active Jobs List */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight px-1">Active Requirements</h2>
+        {activeJobs.length === 0 ? (
+          // ... (keep empty state logic but slightly adjusted or re-used)
+          <div className="text-center py-20 border-2 border-dashed border-muted rounded-3xl">
+            <p className="text-muted-foreground">No active jobs found.</p>
           </div>
-        </div>
-      ) : activeJobs.length === 0 ? (
-        <div className="text-center py-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-500" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
-            <Briefcase className="size-12 text-primary" />
-          </div>
-          <h3 className="text-2xl font-bold mb-3 animate-in fade-in duration-500" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>No active job requirements</h3>
-          <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto animate-in fade-in duration-500" style={{ animationDelay: '400ms', animationFillMode: 'backwards' }}>
-            Create a new job requirement or check "Previous JDs"
-          </p>
-          <button
-            onClick={() => setViewState("form")}
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 animate-in fade-in duration-500"
-            style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}
-          >
-            Create New Requirement
-          </button>
-        </div>
-      ) : (
-        <JobCardsList
-          jobs={activeJobs}
-          onUploadResumes={handleUploadResumes}
-          onViewProfile={handleViewProfile}
-          onStatusChange={handleStatusChange}
-        />
-      )}
+        ) : (
+          <JobCardsList
+            jobs={activeJobs}
+            onUploadResumes={handleUploadResumes}
+            onViewProfile={handleViewProfile}
+            onStatusChange={handleStatusChange}
+          />
+        )}
+      </div>
+
+      {/* Previous JDs (Offline) - REMOVED (Moved to History Page) */}
 
       {/* Resume Upload Modal */}
       {selectedJob && (

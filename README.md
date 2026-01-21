@@ -1,59 +1,46 @@
-# Cvision Monorepo
+# 🦅 Cvision: The Smart Hiring Helper
 
-This is the monorepo for the **Cvision** project, organized into `frontend` and `backend` workspaces.
+Imagine you have a big pile of resumes (papers that tell you about a person's job skills) and you need to find the **best person** for a job. Reading them all takes a long time, right?
 
-## 📂 Project Structure
+**Cvision** is a smart robot that reads them for you! 🤖
 
-- **frontend**: The web application built with [Next.js](https://nextjs.org/).
-- **backend**: The backend services (Placeholder/In-progress).
+1.  **You upload resumes** (PDFs).
+2.  **You tell it what job you are hiring for** (like "I need a Chef").
+3.  **Cvision reads everything** and gives each person a **Score (0-100)** to tell you who is the best match!
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
+## 🚀 How to Run It (The Easy Way)
 
-Ensure you have the following installed on your machine:
+You don't need to be a computer wizard. We made a magic button for you.
 
-- [Node.js](https://nodejs.org/) (Recommended: v20 or later)
-- [npm](https://www.npmjs.com/)
+### Step 1: Install the tools
+Make sure you have `Node.js` and `Python` installed on your computer.
 
-### Installation
-
-Install dependencies for all workspaces from the root directory:
-
-```bash
-npm install
-```
-
-### Running the Application
-
-To start the development server (currently configured to run the frontend):
+### Step 2: Start the Engines!
+Open your terminal (command prompt) in this folder and type:
 
 ```bash
-npm run dev
+npm run dev:all
 ```
 
-This will run `npm run dev` in the `frontend` workspace.
+That's it! 
+*   It starts the **Website** (Frontend) 🖥️
+*   It starts the **Brain** (Python AI) 🧠
+*   It starts the **Filing Cabinet** (Backend Database) 🗄️
 
-### Building
+### Step 3: Use it
+Go to `http://localhost:3000` in your web browser. Upload a resume and see the magic happen!
 
-To build the project:
+---
 
-```bash
-npm run build
-```
+## 🛠️ For the Tech Wizards (Developers)
 
-This will run the build script for all workspaces that have one.
+If you want to know how it works inside:
 
-## 🛠️ Tech Stack
+*   **Frontend:** Next.js (The pretty face)
+*   **Backend:** Node.js (The connection)
+*   **AI Engine:** Python + Sentence Transformers (The thinking part)
+*   **Database:** MongoDB (Where we keep the info)
 
-### Frontend
-
-- **Framework**: Next.js 16 (App Router)
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS v4
-- **Icons**: Lucide React
-- **Authentication**: Clerk
-
-### Backend
-
-- _Work in progress_
+We used **Vector Search** (math with arrows) to find the best matches. It's like finding two stars that are close to each other in the sky. ✨

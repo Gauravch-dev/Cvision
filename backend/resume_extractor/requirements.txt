@@ -23,3 +23,6 @@ httpx
 
 # BSON ObjectId support (included with pymongo, but explicit for clarity)
 # bson is part of pymongo
+
+# Google Gemini
+google-generativeai

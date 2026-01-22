@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@clerk/nextjs";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const sidebarItems = [
     {
@@ -72,7 +73,11 @@ export function Sidebar() {
                 })}
             </div>
 
-            <div className="p-4 border-t border-border/50 flex-shrink-0 bg-background backdrop-blur-xl sticky bottom-0 z-40 mt-auto">
+            <div className="p-4 border-t border-border/50 flex-shrink-0 bg-background backdrop-blur-xl sticky bottom-0 z-40 mt-auto space-y-2">
+                <div className="flex items-center justify-between px-2 py-1.5">
+                    <span className="text-sm font-medium text-muted-foreground">Switch Theme</span>
+                    <ThemeToggle />
+                </div>
                 <SignOutButton>
                     <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                         <LogOut className="size-4" />

@@ -1,8 +1,9 @@
 "use client";
 
-import { X, MapPin, Briefcase, Download, Mail, Phone, IndianRupee, Calendar } from "lucide-react";
+import { X, MapPin, Briefcase, Download, Mail, Phone, IndianRupee, Calendar, Sparkles, Trophy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 // Extended candidate type for detailed view
 export interface CandidateProfile {
@@ -24,7 +25,7 @@ export interface CandidateProfile {
         skills: number;
         experience: number;
         education: number;
-        certification: number; // 🆕 Added for bluff (uses actual skills or proxy)
+        certification: number;
     };
     resumeUrl?: string;
 }
@@ -77,295 +78,248 @@ export function CandidateModal({ candidate, onClose }: CandidateModalProps) {
     ];
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-background rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="sticky top-0 bg-background border-b border-border p-6 flex items-center justify-between z-10">
-                    <div>
-                        <h2 className="text-xl font-semibold">Candidate Profile</h2>
-                        <p className="text-sm text-muted-foreground">Detailed analysis and resume.</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={onClose}>
-                        <X className="size-5" />
-                    </Button>
-                </div>
+        <div className="fixed inset-0 bg-background/98 backdrop-blur-3xl flex items-center justify-center z-50 p-4 transition-all duration-300 animate-in fade-in overflow-y-auto">
+            <div className="relative flex flex-col md:flex-row w-full max-w-5xl h-auto rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 slide-in-from-bottom-4 border py-0 my-8 ring-1 ring-border/50">
+                
+                {/* Close Button */}
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={onClose} 
+                    className="absolute top-4 right-4 z-50 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 rounded-full"
+                >
+                    <X className="size-5" />
+                </Button>
 
-                <div className="p-6 md:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                        {/* Left Sidebar (Profile Info) */}
-                        <div className="md:col-span-4 space-y-6">
-                            {/* Avatar & Header */}
-                            <div className="flex flex-col items-center text-center">
-                                <div className="size-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-4xl font-bold border-4 border-primary/10 mb-4 overflow-hidden relative shadow-sm">
-                                    {candidate.profilePicture ? (
-                                        <img src={candidate.profilePicture} alt={candidate.name} className="size-full rounded-full object-cover" />
-                                    ) : (
-                                        <span className="text-primary">{candidate.name.split(' ').map(n => n[0]).join('')}</span>
-                                    )}
-                                </div>
-                                <h3 className="text-xl font-bold text-foreground">{candidate.name}</h3>
-                                <p className="text-primary font-medium">{candidate.title}</p>
+                {/* LEFT SIDEBAR: Personal Info (Solid Background) */}
+                <div className="w-full md:w-[35%] bg-muted border-r border-border p-8 flex flex-col items-center text-center space-y-6 relative shrink-0">
+                     {/* Decorative Background */}
+                     <div className="absolute top-0 left-0 w-full h-32 bg-primary/5 pointer-events-none" />
+                     <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                    
+                    {/* Avatar */}
+                    <div className="relative group shrink-0">
+                         <div className="size-32 rounded-full p-1 bg-linear-to-br from-primary via-primary/50 to-transparent shadow-xl">
+                            <div className="size-full rounded-full bg-background flex items-center justify-center overflow-hidden border-4 border-background relative">
+                                {candidate.profilePicture ? (
+                                    <img src={candidate.profilePicture} alt={candidate.name} className="size-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                ) : (
+                                    <span className="text-4xl font-black text-primary/80">{candidate.name.split(' ').map(n => n[0]).join('')}</span>
+                                )}
                             </div>
+                         </div>
+                         <div className="absolute bottom-0 right-2 bg-background rounded-full p-1.5 shadow-lg border border-border">
+                            <div className="bg-green-500 size-3 rounded-full animate-pulse" />
+                         </div>
+                    </div>
 
-                            <div className="space-y-4">
-                                {/* Details List */}
-                                <div className="space-y-3 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-3">
-                                        <MapPin className="size-4 shrink-0" />
-                                        <span>{candidate.location}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Calendar className="size-4 shrink-0" />
-                                        <span>{candidate.experience} years experience</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <IndianRupee className="size-4 shrink-0" />
-                                        <span>{candidate.salaryRange}</span>
-                                    </div>
-                                </div>
+                    {/* Name & Title */}
+                    <div className="z-10 w-full">
+                        <h2 className="text-2xl font-black tracking-tight text-foreground mb-1 break-words w-full leading-tight">{candidate.name}</h2>
+                        <p className="text-primary font-medium flex items-center justify-center gap-1.5">
+                            <Briefcase className="size-3.5" />
+                            {candidate.title}
+                        </p>
+                    </div>
 
-                                <div className="h-px bg-border my-2" />
-
-                                {/* Contact Box */}
-                                <div>
-                                    <h4 className="font-semibold text-sm mb-3">Contact</h4>
-                                    <div className="space-y-2 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-2">
-                                            {/* <Mail className="size-4" /> */}
-                                            <a href={`mailto:${candidate.contact.email}`} className="hover:text-primary transition block truncate">
-                                                {candidate.contact.email}
-                                            </a>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {/* <Phone className="size-4" /> */}
-                                            <a href={`tel:${candidate.contact.phone}`} className="hover:text-primary transition block">
-                                                {candidate.contact.phone}
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    variant="outline"
-                                    className="w-full justify-center gap-2"
-                                    size="sm"
-                                    asChild
-                                >
-                                    <a href={candidate.resumeUrl || "#"} target="_blank" download>
-                                        <Download className="size-4" />
-                                        Download Resume
-                                    </a>
-                                </Button>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 w-full gap-3 text-sm">
+                        <div className="bg-background border border-border/50 p-3 rounded-xl flex items-center gap-3 shadow-xs">
+                            <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
+                                <MapPin className="size-4" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-xs text-muted-foreground">Location</p>
+                                <p className="font-semibold text-foreground">{candidate.location}</p>
                             </div>
                         </div>
 
-                        {/* Right Content */}
-                        <div className="md:col-span-8 space-y-6">
-                            <div className="border border-border/50 rounded-xl p-6 bg-gradient-to-b from-card/50 to-background shadow-sm flex flex-col items-center relative overflow-hidden">
-                                {/* Ambient Background Glow */}
-                                <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full opacity-50 pointer-events-none" />
-
-                                <h4 className="font-semibold mb-6 text-center z-10 relative">Match Analysis Radar</h4>
-
-                                <div className="relative flex justify-center w-full z-10">
-                                    <svg width="300" height="280" viewBox="0 0 300 280" className="overflow-visible">
-                                        <defs>
-                                            <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
-                                                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
-                                            </linearGradient>
-                                            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                                                <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                                                <feMerge>
-                                                    <feMergeNode in="coloredBlur" />
-                                                    <feMergeNode in="SourceGraphic" />
-                                                </feMerge>
-                                            </filter>
-                                            <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
-                                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-                                                <feOffset dx="2" dy="4" result="offsetblur" />
-                                                <feComponentTransfer>
-                                                    <feFuncA type="linear" slope="0.3" />
-                                                </feComponentTransfer>
-                                                <feMerge>
-                                                    <feMergeNode />
-                                                    <feMergeNode in="SourceGraphic" />
-                                                </feMerge>
-                                            </filter>
-                                        </defs>
-
-                                        {/* Circular Background Grid (Spider Chart Style) */}
-                                        {[20, 40, 60, 80, 100].map((percent) => (
-                                            <circle
-                                                key={percent}
-                                                cx="150"
-                                                cy="140"
-                                                r={(percent / 100) * 85} // Reduced maxRadius to 85
-                                                fill="none"
-                                                stroke="hsl(var(--border))"
-                                                strokeWidth="1"
-                                                strokeOpacity="0.4"
-                                            />
-                                        ))}
-
-                                        {/* Axis Lines */}
-                                        {radarLabels.map((label, i) => {
-                                            const angle = (label.angle - 90) * (Math.PI / 180);
-                                            const x = 150 + 85 * Math.cos(angle);
-                                            const y = 140 + 85 * Math.sin(angle);
-                                            return (
-                                                <line
-                                                    key={i}
-                                                    x1="150"
-                                                    y1="140"
-                                                    x2={x}
-                                                    y2={y}
-                                                    stroke="hsl(var(--border))"
-                                                    strokeWidth="1"
-                                                    strokeOpacity="0.4"
-                                                />
-                                            );
-                                        })}
-
-                                        {/* 3D Data Polygon with Gradient & Shadow */}
-                                        <polygon
-                                            points={radarPoints().split(' ').map(p => {
-                                                const [x, y] = p.split(',');
-                                                // Recalculate points with new radius (85) inline or rely on helper updating?
-                                                // Helper uses maxRadius var. I need to update the helper var too.
-                                                // Since I cannot change the helper in this block, I will just trust the helper 
-                                                // if I update its specific chunk, OR I can manually scale here.
-                                                // BETTER: I will update the helper `maxRadius` to 85 in a `multi_replace`.
-                                                // WAIT: I am replacing the CONTAINER. The helper function `radarPoints` is OUTSIDE this block.
-                                                // I must ensure `radarPoints` uses 85.
-                                                // For now, let's assume I will update the helper in a separate chunk or just scale it here?
-                                                // Scaling here is messy. I'll update the helper `maxRadius` to 85 in a `multi_replace`.
-                                                return p;
-                                            }).join(' ')}
-                                            fill="url(#radarGradient)"
-                                            stroke="hsl(var(--primary))"
-                                            strokeWidth="3"
-                                            filter="url(#dropShadow)"
-                                            className="origin-[150px_140px] animate-in zoom-in duration-1000 ease-out"
-                                        />
-
-                                        {/* Glowing Data Points */}
-                                        {radarPoints().split(' ').map((point, i) => {
-                                            const [x, y] = point.split(',');
-                                            const val = radarValues[i];
-                                            const label = radarLabels[i].label;
-
-                                            return (
-                                                <g
-                                                    key={i}
-                                                    className="group cursor-pointer"
-                                                    onMouseEnter={() => setHoveredPoint({ x: parseFloat(x), y: parseFloat(y), value: val, label })}
-                                                    onMouseLeave={() => setHoveredPoint(null)}
-                                                >
-                                                    {/* Outer Ring */}
-                                                    <circle
-                                                        cx={x}
-                                                        cy={y}
-                                                        r="6"
-                                                        fill="hsl(var(--background))"
-                                                        stroke="hsl(var(--primary))"
-                                                        strokeWidth="2"
-                                                        opacity="0.8"
-                                                        className="transition-all duration-300 group-hover:r-8 group-hover:stroke-width-3"
-                                                    />
-                                                    {/* Inner Dot */}
-                                                    <circle cx={x} cy={y} r="3" fill="hsl(var(--primary))" filter="url(#glow)" />
-
-                                                    {/* Invisible Hit Area for better UX */}
-                                                    <circle cx={x} cy={y} r="15" fill="transparent" />
-                                                </g>
-                                            );
-                                        })}
-
-                                        {/* Tooltip Overlay */}
-                                        {hoveredPoint && (
-                                            <g transform={`translate(${hoveredPoint.x}, ${hoveredPoint.y - 15})`} className="animate-in fade-in zoom-in duration-200 pointer-events-none">
-                                                <rect
-                                                    x="-40"
-                                                    y="-35"
-                                                    width="80"
-                                                    height="30"
-                                                    rx="6"
-                                                    fill="hsl(var(--popover))"
-                                                    stroke="hsl(var(--border))"
-                                                    strokeWidth="1"
-                                                    className="shadow-md"
-                                                />
-                                                <text
-                                                    x="0"
-                                                    y="-16"
-                                                    textAnchor="middle"
-                                                    dominantBaseline="middle"
-                                                    className="fill-popover-foreground text-xs font-bold"
-                                                >
-                                                    {hoveredPoint.label}: {Math.round(hoveredPoint.value)}%
-                                                </text>
-                                                {/* Little Triangle Pointer */}
-                                                <path d="M -5 -6 L 5 -6 L 0 0 Z" fill="hsl(var(--popover))" stroke="hsl(var(--border))" strokeWidth="1" transform="translate(0, -5)" />
-                                                {/* Cover the stroke at the bottom of triangle to blend */}
-                                                <path d="M -4 -6 L 4 -6" stroke="hsl(var(--popover))" strokeWidth="2" transform="translate(0, -5)" />
-                                            </g>
-                                        )}
-
-                                        {/* Labels */}
-                                        {radarLabels.map((label, i) => {
-                                            const angle = (label.angle - 90) * (Math.PI / 180);
-                                            // Adjust label radius
-                                            const x = 150 + 110 * Math.cos(angle);
-                                            const y = 140 + 110 * Math.sin(angle);
-                                            return (
-                                                <text
-                                                    key={i}
-                                                    x={x}
-                                                    y={y}
-                                                    textAnchor="middle"
-                                                    dominantBaseline="middle"
-                                                    className="fill-muted-foreground text-xs font-bold uppercase tracking-wider"
-                                                >
-                                                    {label.label}
-                                                </text>
-                                            );
-                                        })}
-
-                                        {/* Legend with color indicator */}
-                                        <g transform="translate(125, 260)">
-                                            <rect width="12" height="12" rx="3" fill="hsl(var(--primary))" opacity="0.8" />
-                                            <text x="20" y="10" className="fill-foreground text-xs font-semibold">Candidate</text>
-                                        </g>
-                                    </svg>
-                                </div>
+                        <div className="bg-background border border-border/50 p-3 rounded-xl flex items-center gap-3 shadow-xs">
+                            <div className="p-2 bg-green-500/10 text-green-500 rounded-lg">
+                                <Calendar className="size-4" />
                             </div>
-
-                            {/* Info Sections */}
-                            <div className="space-y-6">
-                                {/* About */}
-                                <div>
-                                    <h4 className="font-semibold mb-2">About</h4>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        {candidate.about}
-                                    </p>
-                                </div>
-
-                                {/* Skills */}
-                                <div>
-                                    <h4 className="font-semibold mb-3">Skills</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {candidate.skills.map((skill) => (
-                                            <span
-                                                key={skill}
-                                                className="px-3 py-1.5 rounded-full bg-secondary/50 text-secondary-foreground text-xs font-medium border border-secondary"
-                                            >
-                                                {skill}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
+                            <div className="text-left">
+                                <p className="text-xs text-muted-foreground">Experience</p>
+                                <p className="font-semibold text-foreground">{candidate.experience} Years</p>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Contact & Actions */}
+                    <div className="w-full space-y-3 mt-auto pt-6">
+                         <div className="flex gap-2 justify-center pb-2">
+                             <Button variant="outline" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary border-primary/20" asChild>
+                                <a href={`mailto:${candidate.contact.email}`} title="Email"><Mail className="size-4" /></a>
+                             </Button>
+                             <Button variant="outline" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary border-primary/20" asChild>
+                                <a href={`tel:${candidate.contact.phone}`} title="Call"><Phone className="size-4" /></a>
+                             </Button>
+                         </div>
+
+                        <Button 
+                            className="w-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all font-bold" 
+                            size="lg"
+                            asChild
+                        >
+                            <a href={candidate.resumeUrl || "#"} target="_blank" download>
+                                <Download className="size-4 mr-2" />
+                                Download Resume
+                            </a>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* RIGHT CONTENT: Analysis (Glass Background) */}
+                <div className="w-full md:w-[65%] bg-background/60 backdrop-blur-xl p-8">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 className="text-lg font-semibold flex items-center gap-2">
+                                <Sparkles className="size-4 text-primary" />
+                                AI Assessment
+                            </h3>
+                            <p className="text-sm text-muted-foreground">Detailed competency breakdown</p>
+                        </div>
+                        <Badge variant="outline" className="text-lg px-4 py-1.5 border-primary/20 bg-primary/5 text-primary">
+                            {candidate.score}% Match
+                        </Badge>
+                    </div>
+
+                    {/* Radar Chart Card */}
+                    <div className="mb-8 relative w-full flex justify-center py-6">
+                        <svg width="300" height="280" viewBox="0 0 300 280" className="overflow-visible relative z-10">
+                            {/* Background Grid - Polygonal */}
+                            {[20, 40, 60, 80, 100].map((percent) => {
+                                const radius = (percent / 100) * 85;
+                                const points = [0, 90, 180, 270].map(angleDeg => {
+                                    const angle = (angleDeg - 90) * (Math.PI / 180);
+                                    const x = 150 + radius * Math.cos(angle);
+                                    const y = 140 + radius * Math.sin(angle);
+                                    return `${x},${y}`;
+                                }).join(' ');
+                                
+                                return (
+                                    <polygon
+                                        key={percent}
+                                        points={points}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        className="text-border"
+                                        strokeWidth="1"
+                                        strokeOpacity="0.5"
+                                    />
+                                );
+                            })}
+
+                            {/* Lines connecting center to corners */}
+                            {radarLabels.map((label, i) => {
+                                const angle = (label.angle - 90) * (Math.PI / 180);
+                                const x = 150 + 85 * Math.cos(angle);
+                                const y = 140 + 85 * Math.sin(angle);
+                                return (
+                                    <line
+                                        key={i}
+                                        x1="150"
+                                        y1="140"
+                                        x2={x}
+                                        y2={y}
+                                        stroke="currentColor"
+                                        className="text-border"
+                                        strokeOpacity="0.5"
+                                    />
+                                );
+                            })}
+
+                            {/* The Polygon Data */}
+                            <polygon
+                                points={radarPoints()}
+                                fill="currentColor"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="text-primary fill-primary/20 origin-[150px_140px] animate-in zoom-in duration-700 ease-out"
+                            />
+
+                            {/* Points & Hover */}
+                            {radarPoints().split(' ').map((point, i) => {
+                                const [x, y] = point.split(',');
+                                const val = radarValues[i];
+                                const label = radarLabels[i].label;
+
+                                return (
+                                    <g
+                                        key={i}
+                                        className="group/point cursor-pointer"
+                                        onMouseEnter={() => setHoveredPoint({ x: parseFloat(x), y: parseFloat(y), value: val, label })}
+                                        onMouseLeave={() => setHoveredPoint(null)}
+                                    >
+                                        <circle cx={x} cy={y} r="4" className="fill-background stroke-primary stroke-2 transition-all duration-300 group-hover/point:r-6" />
+                                        <circle cx={x} cy={y} r="12" fill="transparent" />
+                                    </g>
+                                );
+                            })}
+                        
+                            {/* Hover Tooltip */}
+                            {hoveredPoint && (
+                                <g transform={`translate(${hoveredPoint.x}, ${hoveredPoint.y - 20})`} className="pointer-events-none">
+                                    <rect x="-35" y="-25" width="70" height="25" rx="4" className="fill-popover shadow-lg stroke-border stroke-1" />
+                                    <text x="0" y="-8" textAnchor="middle" dominantBaseline="middle" className="fill-popover-foreground text-[10px] font-bold">
+                                        {hoveredPoint.value}%
+                                    </text>
+                                </g>
+                            )}
+
+                            {/* Labels */}
+                            {radarLabels.map((label, i) => {
+                                const angle = (label.angle - 90) * (Math.PI / 180);
+                                const x = 150 + 110 * Math.cos(angle);
+                                const y = 140 + 110 * Math.sin(angle);
+                                return (
+                                    <text
+                                        key={i}
+                                        x={x}
+                                        y={y}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        className="fill-muted-foreground text-[10px] font-bold uppercase tracking-widest"
+                                    >
+                                        {label.label}
+                                    </text>
+                                );
+                            })}
+                        </svg>
+                    </div>
+
+                    {/* About Section */}
+                    <div className="mb-8">
+                        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                             Summary
+                             <div className="h-px bg-border flex-1" />
+                        </h4>
+                        <p className="text-sm leading-relaxed text-foreground/80">
+                            {candidate.about}
+                        </p>
+                    </div>
+
+                    {/* Skills Section */}
+                    <div>
+                        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                             Top Skills
+                             <div className="h-px bg-border flex-1" />
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                            {candidate.skills.slice(0, 10).map((skill) => (
+                                <Badge 
+                                    key={skill} 
+                                    variant="secondary" 
+                                    className="px-3 py-1 bg-background border border-border/50 hover:border-primary/50 transition-colors"
+                                >
+                                    {skill}
+                                </Badge>
+                            ))}
+                            {candidate.skills.length > 10 && (
+                                <Badge variant="outline" className="px-3 py-1 text-xs">+{candidate.skills.length - 10} more</Badge>
+                            )}
                         </div>
                     </div>
                 </div>

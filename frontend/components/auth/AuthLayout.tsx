@@ -73,10 +73,10 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
                 <div className="relative w-full overflow-hidden mask-fade-sides py-6 border-y border-border/50 bg-background/50 backdrop-blur-sm">
                     {/* Inner Track - Moving */}
                     <div className="flex gap-16 animate-marquee whitespace-nowrap will-change-transform items-center">
-                        {companies.map((company, i) => (
+                        {[...companies, ...companies].map((company, i) => (
                             <div key={i} className="flex items-center gap-3 transition-colors duration-300 group/item">
                                 <div className="w-16 h-16 relative flex items-center justify-center transition-transform hover:scale-110">
-                                   <img src={company.logo} alt={company.name} className="w-full h-full object-contain" />
+                                   <img src={company.logo} alt={company.name} className="w-full h-full object-contain dark:brightness-0 dark:invert opacity-80 hover:opacity-100 transition-opacity" />
                                 </div>
                             </div>
                         ))}

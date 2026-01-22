@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import SkipNav from "@/components/common/SkipNav";
 import { Toaster } from "sonner";
+import { SessionManager } from "@/components/common/SessionManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,8 +39,9 @@ export default function RootLayout({
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <meta name="description" content="AI-powered recruitment engine that reads resumes like a human, but at machine speed." />
         </head>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <SessionManager />
             <SkipNav />
             {!hideFooter && <Header />}
             <main id="main-content" role="main">

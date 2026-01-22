@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useUser } from "@clerk/nextjs"; // Multi-tenancy: Get current user
 import { X, Upload, FileText, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
@@ -23,9 +24,14 @@ export default function RecruiterResumeModal({
     const [files, setFiles] = useState<File[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    if (!isOpen) return null;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!isOpen || !mounted) return null;
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
@@ -129,8 +135,8 @@ export default function RecruiterResumeModal({
         }
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+    return createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-card/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-8 duration-500">
                 {/* Header */}
                 <div className="p-7 border-b border-border/50">
@@ -246,6 +252,7 @@ export default function RecruiterResumeModal({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
